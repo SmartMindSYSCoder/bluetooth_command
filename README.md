@@ -1,6 +1,6 @@
 # bluetooth_command
 
-A new Flutter project.
+Plugin usage notes  .
 
 ## Getting Started
 This plugin for send command to bluetooth
