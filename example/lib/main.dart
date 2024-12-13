@@ -46,6 +46,13 @@ class _MyAppState extends State<MyApp> {
 
               TextButton(onPressed: ()async{
 
+
+           await _smBluetoothCommand.checkPermission() ;
+
+
+              }, child: const Text("Check Permission")),
+              TextButton(onPressed: ()async{
+
                 if(boundedDevices.isEmpty){
 
                   debugPrint("no devices ");
@@ -67,9 +74,8 @@ class _MyAppState extends State<MyApp> {
               const SizedBox(height: 30,),
 
               TextButton(onPressed: ()async{
-                var res=   await _smBluetoothCommand.getBondedDevices() ;
+                boundedDevices=   await _smBluetoothCommand.getBondedDevices() ;
 
-                boundedDevices=res;
 
 
                 setState(() {
