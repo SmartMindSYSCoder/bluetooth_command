@@ -89,7 +89,9 @@ class _MyAppState extends State<MyApp> {
 
 
               Expanded(
-                child: ListView.builder(itemBuilder: (bc,index){
+                child: ListView.builder(
+                    itemCount: boundedDevices.length,
+                    itemBuilder: (bc,index){
 
                   return ListTile(
                     title: Text(boundedDevices[index].name,style: const TextStyle(fontSize: 15),),

@@ -12,9 +12,11 @@ packages:
   bluetooth_command:
     dependency: "direct main"
     description:
-      path: ".."
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: f2956354e4b8dc89d7b8741a1c36fc226887eec3
+      url: "https://github.com/SmartMindSYSCoder/bluetooth_command.git"
+    source: git
     version: "0.0.1"
   boolean_selector:
     dependency: transitive
