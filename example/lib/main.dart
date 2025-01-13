@@ -51,22 +51,18 @@ class _MyAppState extends State<MyApp> {
 
 
               }, child: const Text("Check Permission")),
-              TextButton(onPressed: ()async{
-
-                if(boundedDevices.isEmpty){
-
-                  debugPrint("no devices ");
-                  return;
-
-                }
-
-             var res=   await _smBluetoothCommand.sendCommand(macAddress:boundedDevices.first.macAddress , command: "open") ;
-
-             setState(() {
-               result="result :$res";
-             });
-
-              }, child: const Text("Send Command")),
+              // TextButton(onPressed: ()async{
+              //
+              //   if(boundedDevices.isEmpty){
+              //
+              //     debugPrint("no devices ");
+              //     return;
+              //
+              //   }
+              //
+              //
+              //
+              // }, child: const Text("Send Command")),
 
 
               const SizedBox(height: 30,),
@@ -94,6 +90,13 @@ class _MyAppState extends State<MyApp> {
                     itemBuilder: (bc,index){
 
                   return ListTile(
+                    onTap: ()async{
+                      var res=   await _smBluetoothCommand.sendCommand(macAddress:boundedDevices[index].macAddress , command: "open") ;
+
+                      setState(() {
+                        result="result :$res";
+                      });
+                    },
                     title: Text(boundedDevices[index].name,style: const TextStyle(fontSize: 15),),
                     subtitle: Text(boundedDevices[index].macAddress,style: const TextStyle(fontSize: 12),),
 

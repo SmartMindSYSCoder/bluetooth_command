@@ -42,6 +42,12 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
   public Activity activity;
   private  PermissionHelper permissionHelper;
 
+
+  private BluetoothAdapter bluetoothAdapter;
+  private BluetoothSocket bluetoothSocket;
+  private OutputStream outputStream;
+
+
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "bluetooth_command");
@@ -66,7 +72,22 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
 
 
       if(permissionHelper.isPermissionsGranted()){
-        sendCommand(macAddress,command);
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (bluetoothAdapter == null) {
+          showToast("Bluetooth is not supported on this device");
+          return;
+        }
+
+        if (!bluetoothAdapter.isEnabled()) {
+          showToast("Please enable Bluetooth");
+          return;
+        }
+
+                connect(macAddress,command);
+
+
+
 
       }
       else{
@@ -148,97 +169,144 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
 
 
 
-  protected  void sendCommand(String macAddress, String command){
-
-
-
-
-    // Initialize Bluetooth Adapter
-    BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
-
-// Get remote Bluetooth device
-    BluetoothDevice hc05 = btAdapter.getRemoteDevice(macAddress);
-
-// Initialize Bluetooth socket
-    BluetoothSocket btSocket = null;
-
+  private void connect(String macAddress, String command) {
     try {
-      // Create and connect the Bluetooth socket
-      btSocket = hc05.createRfcommSocketToServiceRecord(mUUID);
-      btSocket.connect();
+      BluetoothDevice hc05Device = bluetoothAdapter.getRemoteDevice(macAddress);
+      bluetoothSocket = hc05Device.createRfcommSocketToServiceRecord(mUUID);
 
-      // Obtain the output stream
-      OutputStream outputStream = btSocket.getOutputStream();
+      bluetoothSocket.connect();
 
-      // Write the command
-      outputStream.write(command.getBytes());
+      // Connection successful
+      outputStream = bluetoothSocket.getOutputStream();
+      showToast("Connected");
 
-      // Close the output stream
+      // Optionally, send a test command
+      sendCommand(command);
+    } catch (IOException e) {
+      // Connection failed
+      showToast("Failed to connect ");
+     // e.printStackTrace();
+    }
+  }
+
+  private void sendCommand(String command) {
+    try {
+      if (outputStream != null) {
+        outputStream.write(command.getBytes());
+
+        //      // Close the output stream
       if (outputStream != null) {
         outputStream.close();
       }
 
       // Close the Bluetooth socket
-      if (btSocket != null && btSocket.isConnected()) {
-        btSocket.close();
+      if (bluetoothSocket != null && bluetoothSocket.isConnected()) {
+        bluetoothSocket.close();
       }
 
-      // Indicate success
-      result.success(1);
 
+        showToast("Command sent: " + command);
+      }
     } catch (IOException e) {
-      // Handle exceptions
-     // e.printStackTrace(); // Log the error for debugging purposes
-      result.success(0);
-    } finally {
-      // Ensure cleanup in case of exception
-      if (btSocket != null) {
-        try {
-          if (btSocket.isConnected()) {
-            btSocket.close();
-          }
-        } catch (IOException closeException) {
-          closeException.printStackTrace(); // Log any errors during cleanup
-        }
-      }
+      showToast("Error sending command");
+    //  e.printStackTrace();
     }
+  }
 
 
 
+//  protected  void sendCommand(String macAddress, String command){
+//
+//
+//
+//
+//    // Initialize Bluetooth Adapter
 //    BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
 //
+//// Get remote Bluetooth device
 //    BluetoothDevice hc05 = btAdapter.getRemoteDevice(macAddress);
 //
-//
+//// Initialize Bluetooth socket
 //    BluetoothSocket btSocket = null;
 //
-////    Log.i("macAddress",macAddress);
-//
-//
 //    try {
+//      // Create and connect the Bluetooth socket
 //      btSocket = hc05.createRfcommSocketToServiceRecord(mUUID);
 //      btSocket.connect();
 //
+//      // Obtain the output stream
 //      OutputStream outputStream = btSocket.getOutputStream();
+//      showToast("Connected");
 //
+//      // Write the command
 //      outputStream.write(command.getBytes());
-//      outputStream.close();
-//      btSocket.close();
+//
+//      // Close the output stream
+//      if (outputStream != null) {
+//        outputStream.close();
+//      }
+//
+//      // Close the Bluetooth socket
+//      if (btSocket != null && btSocket.isConnected()) {
+//        btSocket.close();
+//      }
+//
+//      // Indicate success
 //      result.success(1);
 //
 //    } catch (IOException e) {
-////      e.printStackTrace();
+//      // Handle exceptions
+//     // e.printStackTrace(); // Log the error for debugging purposes
 //      result.success(0);
-//
+//    } finally {
+//      // Ensure cleanup in case of exception
+//      if (btSocket != null) {
+//        try {
+//          if (btSocket.isConnected()) {
+//            btSocket.close();
+//          }
+//        } catch (IOException closeException) {
+//          closeException.printStackTrace(); // Log any errors during cleanup
+//        }
+//      }
 //    }
 //
 //
-
-
-
-
-
-  }
+//
+////    BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+////
+////    BluetoothDevice hc05 = btAdapter.getRemoteDevice(macAddress);
+////
+////
+////    BluetoothSocket btSocket = null;
+////
+//////    Log.i("macAddress",macAddress);
+////
+////
+////    try {
+////      btSocket = hc05.createRfcommSocketToServiceRecord(mUUID);
+////      btSocket.connect();
+////
+////      OutputStream outputStream = btSocket.getOutputStream();
+////
+////      outputStream.write(command.getBytes());
+////      outputStream.close();
+////      btSocket.close();
+////      result.success(1);
+////
+////    } catch (IOException e) {
+//////      e.printStackTrace();
+////      result.success(0);
+////
+////    }
+////
+////
+//
+//
+//
+//
+//
+//  }
   protected  void getBondedDevices(){
     List<String> devList = new ArrayList<String>();
 
@@ -272,5 +340,7 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
     }
 
   }
-
+  private void showToast(String message) {
+    Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show();
+  }
 }
