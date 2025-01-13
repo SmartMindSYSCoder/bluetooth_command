@@ -151,32 +151,89 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
   protected  void sendCommand(String macAddress, String command){
 
 
+
+
+    // Initialize Bluetooth Adapter
     BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
 
+// Get remote Bluetooth device
     BluetoothDevice hc05 = btAdapter.getRemoteDevice(macAddress);
 
-
+// Initialize Bluetooth socket
     BluetoothSocket btSocket = null;
 
-//    Log.i("macAddress",macAddress);
-
-
     try {
+      // Create and connect the Bluetooth socket
       btSocket = hc05.createRfcommSocketToServiceRecord(mUUID);
       btSocket.connect();
 
+      // Obtain the output stream
       OutputStream outputStream = btSocket.getOutputStream();
-      
+
+      // Write the command
       outputStream.write(command.getBytes());
-      outputStream.close();
-      btSocket.close();
+
+      // Close the output stream
+      if (outputStream != null) {
+        outputStream.close();
+      }
+
+      // Close the Bluetooth socket
+      if (btSocket != null && btSocket.isConnected()) {
+        btSocket.close();
+      }
+
+      // Indicate success
       result.success(1);
 
     } catch (IOException e) {
-//      e.printStackTrace();
+      // Handle exceptions
+     // e.printStackTrace(); // Log the error for debugging purposes
       result.success(0);
-
+    } finally {
+      // Ensure cleanup in case of exception
+      if (btSocket != null) {
+        try {
+          if (btSocket.isConnected()) {
+            btSocket.close();
+          }
+        } catch (IOException closeException) {
+          closeException.printStackTrace(); // Log any errors during cleanup
+        }
+      }
     }
+
+
+
+//    BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+//
+//    BluetoothDevice hc05 = btAdapter.getRemoteDevice(macAddress);
+//
+//
+//    BluetoothSocket btSocket = null;
+//
+////    Log.i("macAddress",macAddress);
+//
+//
+//    try {
+//      btSocket = hc05.createRfcommSocketToServiceRecord(mUUID);
+//      btSocket.connect();
+//
+//      OutputStream outputStream = btSocket.getOutputStream();
+//
+//      outputStream.write(command.getBytes());
+//      outputStream.close();
+//      btSocket.close();
+//      result.success(1);
+//
+//    } catch (IOException e) {
+////      e.printStackTrace();
+//      result.success(0);
+//
+//    }
+//
+//
+
 
 
 
