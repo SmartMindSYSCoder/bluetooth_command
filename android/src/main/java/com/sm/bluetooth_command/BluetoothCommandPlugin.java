@@ -65,9 +65,12 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
 
     if (call.method.equals("sendCommand")) {
 
-      final Map<String,String> arguments=call.arguments();
+      final Map<String,Object> arguments=call.arguments();
       String macAddressOrName= (String) arguments.get("macAddressOrName");
       boolean   connectByName= (boolean) arguments.get("connectByName");
+
+
+
       String   command= (String) arguments.get("command");
 
 
@@ -88,7 +91,7 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
 
         if(connectByName){
 
-          if(macAddressOrName !=null && !macAddressOrName.isEmpty()){
+          if(macAddressOrName ==null || macAddressOrName.isEmpty()){
 
             showToast("please give a valid device name");
 
