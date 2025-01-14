@@ -11,8 +11,8 @@ class SMBluetoothCommand {
   final _methodChannel = const MethodChannel('bluetooth_command');
 
 
-  Future<int?> sendCommand({required String macAddress,required String command}) async{
-    final result = await _methodChannel.invokeMethod('sendCommand',{"macAddress":macAddress,'command':command});
+  Future<int?> sendCommand({required String macAddressOrName,required String command,bool connectByName=false}) async{
+    final result = await _methodChannel.invokeMethod('sendCommand',{"macAddressOrName":macAddressOrName,'command':command,'connectByName':connectByName});
 
  return result;
 

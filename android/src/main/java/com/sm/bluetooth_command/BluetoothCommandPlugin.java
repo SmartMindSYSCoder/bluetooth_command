@@ -66,9 +66,9 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
     if (call.method.equals("sendCommand")) {
 
       final Map<String,String> arguments=call.arguments();
-      String macAddress= (String) arguments.get("macAddress");
+      String macAddressOrName= (String) arguments.get("macAddressOrName");
+      boolean   connectByName= (boolean) arguments.get("connectByName");
       String   command= (String) arguments.get("command");
-
 
 
       if(permissionHelper.isPermissionsGranted()){
@@ -84,8 +84,23 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
           return;
         }
 
-                connect(macAddress,command);
 
+
+        if(connectByName){
+
+          if(macAddressOrName !=null && !macAddressOrName.isEmpty()){
+
+            showToast("please give a valid device name");
+
+            return;
+          }
+
+          scanAndConnectToDeviceByName(macAddressOrName, command);
+        }
+
+        else {
+          connect(macAddressOrName, command);
+        }
 
 
 
@@ -340,6 +355,47 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
     }
 
   }
+
+
+
+
+  private void scanAndConnectToDeviceByName(String deviceName,String command) {
+    Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+    BluetoothDevice targetDevice = null;
+
+    if (pairedDevices != null && !pairedDevices.isEmpty()) {
+      for (BluetoothDevice device : pairedDevices) {
+        if (deviceName.equals(device.getName())) {
+          targetDevice = device;
+          break;
+        }
+      }
+    }
+
+    if (targetDevice != null) {
+      connectToDevice(targetDevice,command);
+    } else {
+      showToast( deviceName+" device not found.");
+    }
+  }
+  private void connectToDevice(BluetoothDevice device,String command) {
+    UUID uuid = device.getUuids()[0].getUuid();
+
+    try {
+      bluetoothSocket = device.createRfcommSocketToServiceRecord(uuid);
+      bluetoothSocket.connect();
+
+      outputStream = bluetoothSocket.getOutputStream();
+      showToast("Connected to " + device.getName());
+
+
+      sendCommand(command);
+
+    } catch (IOException e) {
+      showToast("Connection Failed:\n"+e.getMessage());
+    }
+  }
+
   private void showToast(String message) {
     Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show();
   }

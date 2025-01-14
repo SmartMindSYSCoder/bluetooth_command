@@ -67,7 +67,17 @@ class _MyAppState extends State<MyApp> {
 
               const SizedBox(height: 30,),
               Text(result),
-              const SizedBox(height: 30,),
+              const SizedBox(height: 10,),
+              TextButton(onPressed: ()async{
+
+                var result=   await _smBluetoothCommand.sendCommand(macAddressOrName: 'test_device', command: 'open',connectByName: true) ;
+
+
+
+
+              }, child: const Text("Direct connect")),
+
+              const SizedBox(height: 10,),
 
               TextButton(onPressed: ()async{
                 boundedDevices=   await _smBluetoothCommand.getBondedDevices() ;
@@ -91,7 +101,7 @@ class _MyAppState extends State<MyApp> {
 
                   return ListTile(
                     onTap: ()async{
-                      var res=   await _smBluetoothCommand.sendCommand(macAddress:boundedDevices[index].macAddress , command: "open") ;
+                      var res=   await _smBluetoothCommand.sendCommand(macAddressOrName:boundedDevices[index].macAddress , command: "open") ;
 
                       setState(() {
                         result="result :$res";
