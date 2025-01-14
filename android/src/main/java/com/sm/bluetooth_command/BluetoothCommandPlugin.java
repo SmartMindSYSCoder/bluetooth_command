@@ -382,10 +382,10 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
     }
   }
   private void connectToDevice(BluetoothDevice device,String command) {
-    UUID uuid = device.getUuids()[0].getUuid();
+//    UUID uuid = device.getUuids()[0].getUuid();
 
     try {
-      bluetoothSocket = device.createRfcommSocketToServiceRecord(uuid);
+      bluetoothSocket = device.createRfcommSocketToServiceRecord(mUUID);
       bluetoothSocket.connect();
 
       outputStream = bluetoothSocket.getOutputStream();
