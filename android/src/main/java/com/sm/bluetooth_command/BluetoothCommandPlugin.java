@@ -211,6 +211,7 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
     try {
       if (outputStream != null) {
         outputStream.write(command.getBytes());
+        outputStream.flush();
 
         //      // Close the output stream
       if (outputStream != null) {
