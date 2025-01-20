@@ -208,15 +208,17 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
   }
 
   private void sendCommand(String command) {
+    final  String newline_crlf = "\r\n";
+
     try {
       if (outputStream != null) {
 
         byte[] data;
 
-        data = (command + "\r\n").getBytes();
+        data = (command + newline_crlf).getBytes();
 
         outputStream.write(data);
-        outputStream.flush();
+       // outputStream.flush();
 
         //      // Close the output stream
       if (outputStream != null) {
