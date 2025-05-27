@@ -70,79 +70,51 @@ class _MyAppState extends State<MyApp> {
               const SizedBox(height: 10,),
               TextButton(onPressed: ()async{
 
-                 _smBluetoothCommand.init();
-
-                // var result=   await _smBluetoothCommand.connect(deviceName: 'HAGenie_Control_Device') ;
-                var result=   await _smBluetoothCommand.connect(deviceName: 'HC-06') ;
-
-
-             await   Future.delayed(const Duration(seconds: 1));
-
-             bool isConnected=await _smBluetoothCommand.isConnected();
-             print(isConnected);
-
-
-              }, child: const Text("Connect")),
-              const SizedBox(height: 10,),
-
-
-              TextButton(onPressed: ()async{
-
-                var result=   await _smBluetoothCommand.sendCommand(command: 'open') ;
+                var result=   await _smBluetoothCommand.sendCommand(macAddressOrName: 'test_device', command: 'open',connectByName: true) ;
 
 
 
 
-              }, child: const Text("Open")),
+              }, child: const Text("Direct connect")),
 
               const SizedBox(height: 10,),
 
               TextButton(onPressed: ()async{
-
-                var result=   await _smBluetoothCommand.sendCommand(command: 'close') ;
-
+                boundedDevices=   await _smBluetoothCommand.getBondedDevices() ;
 
 
 
-              }, child: const Text("Close")),
+                setState(() {
+                });
 
-              //
-              // TextButton(onPressed: ()async{
-              //   boundedDevices=   await _smBluetoothCommand.getBondedDevices() ;
-              //
-              //
-              //
-              //   setState(() {
-              //   });
-              //
-              // }, child: const Text("get Bounded Devices")),
-              // const SizedBox(height: 30,),
-              //
-              //
-              // const Text("Devices List\n\n"),
-              //
-              //
-              // Expanded(
-              //   child: ListView.builder(
-              //       itemCount: boundedDevices.length,
-              //       itemBuilder: (bc,index){
-              //
-              //     return ListTile(
-              //       onTap: ()async{
-              //         // var res=   await _smBluetoothCommand.sendCommand(macAddressOrName:boundedDevices[index].macAddress , command: "open") ;
-              //         //
-              //         // setState(() {
-              //         //   result="result :$res";
-              //         // });
-              //       },
-              //       title: Text(boundedDevices[index].name,style: const TextStyle(fontSize: 15),),
-              //       subtitle: Text(boundedDevices[index].macAddress,style: const TextStyle(fontSize: 12),),
-              //
-              //
-              //     );
-              //
-              //   }),
-              // )
+              }, child: const Text("get Bounded Devices")),
+              const SizedBox(height: 30,),
+
+
+              const Text("Devices List\n\n"),
+
+
+              Expanded(
+                child: ListView.builder(
+                    itemCount: boundedDevices.length,
+                    itemBuilder: (bc,index){
+
+                  return ListTile(
+                    onTap: ()async{
+                      var res=   await _smBluetoothCommand.sendCommand(macAddressOrName:boundedDevices[index].macAddress , command: "open") ;
+
+                      setState(() {
+                        result="result :$res";
+                      });
+                    },
+                    title: Text(boundedDevices[index].name,style: const TextStyle(fontSize: 15),),
+                    subtitle: Text(boundedDevices[index].macAddress,style: const TextStyle(fontSize: 12),),
+
+
+                  );
+
+                }),
+              )
 
             ],
           ),

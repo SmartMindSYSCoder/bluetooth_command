@@ -41,7 +41,6 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
   public Context applicationContext;
   public Activity activity;
   private  PermissionHelper permissionHelper;
-  private  TerminalHelper terminalHelper;
 
 
   private BluetoothAdapter bluetoothAdapter;
@@ -51,7 +50,7 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "bluetooth_command_new");
+    channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "bluetooth_command");
     channel.setMethodCallHandler(this);
 
     this.applicationContext = flutterPluginBinding.getApplicationContext();
@@ -64,129 +63,60 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
     
 
 
-    if (call.method.equals("init")) {
-
-
-
-
-      if(permissionHelper.isPermissionsGranted()){
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        if (bluetoothAdapter == null) {
-          showToast("Bluetooth is not supported on this device");
-          return;
-        }
-
-        if (!bluetoothAdapter.isEnabled()) {
-          showToast("Please enable Bluetooth");
-          return;
-        }
-
-
-
-
-
-          terminalHelper.init();
-
-
-
-
-      }
-      else{
-
-        permissionHelper.checkPermissions();
-
-      }
-
-
-
-    }
-
-   else if (call.method.equals("connect")) {
-
-
+    if (call.method.equals("sendCommand")) {
 
       final Map<String,Object> arguments=call.arguments();
-      String deviceName= (String) arguments.get("deviceName");
-
-
-
-
-
-      if(permissionHelper.isPermissionsGranted()){
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        if (bluetoothAdapter == null) {
-          showToast("Bluetooth is not supported on this device");
-          return;
-        }
-
-        if (!bluetoothAdapter.isEnabled()) {
-          showToast("Please enable Bluetooth");
-          return;
-        }
-
-
-
-
-
-          connect(deviceName);
-
-
-
-
-      }
-      else{
-
-        permissionHelper.checkPermissions();
-
-      }
-
-
-
-    }
-
-
-   else if (call.method.equals("sendCommand")) {
-
-      final Map<String,Object> arguments=call.arguments();
+      String macAddressOrName= (String) arguments.get("macAddressOrName");
+      boolean   connectByName= (boolean) arguments.get("connectByName");
 
 
 
       String   command= (String) arguments.get("command");
 
 
+      if(permissionHelper.isPermissionsGranted()){
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (bluetoothAdapter == null) {
+          showToast("Bluetooth is not supported on this device");
+          return;
+        }
+
+        if (!bluetoothAdapter.isEnabled()) {
+          showToast("Please enable Bluetooth");
+          return;
+        }
 
 
-      if( terminalHelper !=null && terminalHelper.isConnected()){
-        terminalHelper.send(command);
+
+        if(connectByName){
+
+          if(macAddressOrName ==null || macAddressOrName.isEmpty()){
+
+            showToast("please give a valid device name");
+
+            return;
+          }
+
+          scanAndConnectToDeviceByName(macAddressOrName, command);
+        }
+
+        else {
+          connect(macAddressOrName, command);
+        }
+
+
+
+      }
+      else{
+
+        permissionHelper.checkPermissions();
+
       }
 
 
 
     }
-   else if (call.method.equals("isConnected")) {
-
-
-
-     result.success(terminalHelper.isConnected());
-
-
-
-
-    }
-   else if (call.method.equals("isInitialized")) {
-
-
-
-     result.success(terminalHelper.isInitialized());
-
-
-
-
-    }
-
-
    else if (call.method.equals("getBondedDevices")) {
 
 
@@ -238,7 +168,6 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
 //    this.applicationContext = activityPluginBinding.getApplicationContext();
     permissionHelper = new PermissionHelper(activity, applicationContext);
 
-    terminalHelper = new TerminalHelper(activity, applicationContext);
 
   }
 
@@ -258,11 +187,152 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
 
 
 
+  private void connect(String macAddress, String command) {
+    try {
+      BluetoothDevice hc05Device = bluetoothAdapter.getRemoteDevice(macAddress);
+      bluetoothSocket = hc05Device.createRfcommSocketToServiceRecord(mUUID);
+
+      bluetoothSocket.connect();
+
+      // Connection successful
+      outputStream = bluetoothSocket.getOutputStream();
+      showToast("Connected");
+
+      // Optionally, send a test command
+      sendCommand(command);
+    } catch (IOException e) {
+      // Connection failed
+      showToast("Failed to connect ");
+     // e.printStackTrace();
+    }
+  }
+
+  private void sendCommand(String command) {
+    final  String newline_crlf = "\r\n";
+
+    try {
+      if (outputStream != null) {
+
+        byte[] data;
+
+        data = (command + newline_crlf).getBytes();
+
+        outputStream.write(data);
+       // outputStream.flush();
+
+        //      // Close the output stream
+      if (outputStream != null) {
+        outputStream.close();
+      }
+
+      // Close the Bluetooth socket
+      if (bluetoothSocket != null && bluetoothSocket.isConnected()) {
+        bluetoothSocket.close();
+      }
+
+
+        showToast("Command sent: " + command);
+      }
+    } catch (IOException e) {
+      showToast("Error sending command");
+    //  e.printStackTrace();
+    }
+  }
 
 
 
-
-
+//  protected  void sendCommand(String macAddress, String command){
+//
+//
+//
+//
+//    // Initialize Bluetooth Adapter
+//    BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+//
+//// Get remote Bluetooth device
+//    BluetoothDevice hc05 = btAdapter.getRemoteDevice(macAddress);
+//
+//// Initialize Bluetooth socket
+//    BluetoothSocket btSocket = null;
+//
+//    try {
+//      // Create and connect the Bluetooth socket
+//      btSocket = hc05.createRfcommSocketToServiceRecord(mUUID);
+//      btSocket.connect();
+//
+//      // Obtain the output stream
+//      OutputStream outputStream = btSocket.getOutputStream();
+//      showToast("Connected");
+//
+//      // Write the command
+//      outputStream.write(command.getBytes());
+//
+//      // Close the output stream
+//      if (outputStream != null) {
+//        outputStream.close();
+//      }
+//
+//      // Close the Bluetooth socket
+//      if (btSocket != null && btSocket.isConnected()) {
+//        btSocket.close();
+//      }
+//
+//      // Indicate success
+//      result.success(1);
+//
+//    } catch (IOException e) {
+//      // Handle exceptions
+//     // e.printStackTrace(); // Log the error for debugging purposes
+//      result.success(0);
+//    } finally {
+//      // Ensure cleanup in case of exception
+//      if (btSocket != null) {
+//        try {
+//          if (btSocket.isConnected()) {
+//            btSocket.close();
+//          }
+//        } catch (IOException closeException) {
+//          closeException.printStackTrace(); // Log any errors during cleanup
+//        }
+//      }
+//    }
+//
+//
+//
+////    BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+////
+////    BluetoothDevice hc05 = btAdapter.getRemoteDevice(macAddress);
+////
+////
+////    BluetoothSocket btSocket = null;
+////
+//////    Log.i("macAddress",macAddress);
+////
+////
+////    try {
+////      btSocket = hc05.createRfcommSocketToServiceRecord(mUUID);
+////      btSocket.connect();
+////
+////      OutputStream outputStream = btSocket.getOutputStream();
+////
+////      outputStream.write(command.getBytes());
+////      outputStream.close();
+////      btSocket.close();
+////      result.success(1);
+////
+////    } catch (IOException e) {
+//////      e.printStackTrace();
+////      result.success(0);
+////
+////    }
+////
+////
+//
+//
+//
+//
+//
+//  }
   protected  void getBondedDevices(){
     List<String> devList = new ArrayList<String>();
 
@@ -300,7 +370,7 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
 
 
 
-  private void connect(String deviceName) {
+  private void scanAndConnectToDeviceByName(String deviceName,String command) {
     Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
     BluetoothDevice targetDevice = null;
 
@@ -314,20 +384,28 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
     }
 
     if (targetDevice != null) {
-
-
-
-      terminalHelper.connect(targetDevice.getAddress());
-
-
+      connectToDevice(targetDevice,command);
     } else {
       showToast( deviceName+" device not found.");
     }
   }
+  private void connectToDevice(BluetoothDevice device,String command) {
+//    UUID uuid = device.getUuids()[0].getUuid();
+
+    try {
+      bluetoothSocket = device.createRfcommSocketToServiceRecord(mUUID);
+      bluetoothSocket.connect();
+
+      outputStream = bluetoothSocket.getOutputStream();
+      showToast("Connected to " + device.getName());
 
 
+      sendCommand(command);
 
-
+    } catch (IOException e) {
+      showToast("Connection Failed:\n"+e.getMessage());
+    }
+  }
 
   private void showToast(String message) {
     Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show();
