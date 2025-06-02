@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import android.app.Activity;
 import android.content.Context;
 import android.widget.Toast;
-
+import android.os.Handler;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -399,8 +399,14 @@ public class BluetoothCommandPlugin implements FlutterPlugin, MethodCallHandler 
       outputStream = bluetoothSocket.getOutputStream();
       showToast("Connected to " + device.getName());
 
-
+//      new Handler().postDelayed(() -> sendCommand(command), 3000);
+      Handler handler = new Handler();
+      handler.postDelayed(new Runnable() {
+        public void run() {
       sendCommand(command);
+        }
+      }, 3000);
+
 
     } catch (IOException e) {
       showToast("Connection Failed:\n"+e.getMessage());
